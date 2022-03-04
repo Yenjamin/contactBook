@@ -1,6 +1,7 @@
 from tkinter import *
 from tkinter import scrolledtext
 import filehandler
+import re
 
 class display(Tk):
     def __init__(self):
@@ -22,23 +23,30 @@ class display(Tk):
         number = StringVar()
         Label(self, text = "NAME", font="arial 12 bold", bg = "SlateGray3").place(x= 30, y=20)
         Entry(self, textvariable = contact).place(x= 100, y=20)
+        numOnly = (self.register(self.numberCheck), "%d", "%P")
         Label(self, text = "PHONE NO.", font="arial 12 bold",bg = "SlateGray3").place(x= 30, y=70)
-        Entry(self, textvariable = number).place(x= 130, y=70)
+        Entry(self, textvariable = number,  validate="key", validatecommand=numOnly).place(x= 130, y=70)
         def selectSet() :
             select.delete(0,END)
             for name in sorted(contactlist.keys()) :
                 select.insert (END, name)
         selectSet()
-        def addContact(): 
-            contactlist[contact.get()] = number.get()
-            selectSet()
+        def addContact():
+            if filehandler.numbercheck(self, number.get()):
+                contactlist[contact.get()] = number.get()
+                selectSet()
+            else:
+                number.set("")
         def selected():
             index = select.curselection()[0]
             return list(sorted(contactlist.keys()))[index]
         def edit():
-            contactlist[selected()] = number.get()
-            contactlist[contact.get()] = contactlist.pop(selected())
-            selectSet()
+            if filehandler.numbercheck(self, number.get()):
+                contactlist[selected()] = number.get()
+                contactlist[contact.get()] = contactlist.pop(selected())
+                selectSet()
+            else:
+                number.set("")
         def delete():
             contactlist.pop(selected())
             selectSet()
@@ -56,3 +64,8 @@ class display(Tk):
         Button(self,text="RESET", font='arial 12 bold',bg='SlateGray4', command = reset).place(x= 50, y=310)
         self.mainloop()
         filehandler.savecontact(contactlist)
+    
+    def numberCheck(self, action, string):
+            regex = re.compile(r"[0-9]*$")
+            result = regex.match(string)
+            return (string == "" or result is not None)
